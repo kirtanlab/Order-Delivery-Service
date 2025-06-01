@@ -1,5 +1,4 @@
 name: CI/CD Pipeline
-
 on:
   push:
     branches: [ main, develop ]
@@ -16,12 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.21'
-
+    
     - name: Cache Go modules
       uses: actions/cache@v3
       with:
@@ -29,13 +28,13 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-
+    
     - name: Install dependencies
       run: go mod download
-
+    
     - name: Run tests
       run: go test -v ./...
-
+    
     - name: Run linter
       uses: golangci/golangci-lint-action@v3
       with:
@@ -45,45 +44,65 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
+    
+    # Updated authentication method
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
       with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
-
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+    
+    # Configure Docker authentication properly
     - name: Configure Docker to use gcloud as credential helper
-      run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
-
+      run: |
+        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+    
     - name: Create Artifact Registry repository (if not exists)
       run: |
         gcloud artifacts repositories create my-repo \
           --repository-format=docker \
           --location=${{ env.REGION }} \
           --description="Docker repository for my Go app" || true
-
+    
     - name: Build and push Docker image
       run: |
+        # Build the image
         docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        
+        # Push the SHA-tagged image
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }}
-
+        
+        # Tag and push as latest
         docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} \
                    ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
-
+        
+        # Tag and push as previous (for rollback)
+        docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+                   ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:previous
+        docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:previous
+    
     - name: Deploy to VM via SSH
-      uses: appleboy/ssh-action@v0.1.10
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.GCE_INSTANCE_IP }}
         username: ${{ secrets.GCE_SSH_USERNAME }}
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
         script: |
+          # Authenticate Docker on the VM
+          echo '${{ secrets.GCP_SA_KEY }}' | docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
+          
+          # Stop and remove existing container
           docker stop my-go-app || true
           docker rm my-go-app || true
+          
+          # Pull and run new container
           docker pull ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
           docker run -d --name my-go-app -p 8080:8080 --restart unless-stopped \
             ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
@@ -92,16 +111,21 @@ jobs:
     needs: build-and-deploy
     runs-on: ubuntu-latest
     if: failure()
-
     steps:
     - name: Rollback via SSH
-      uses: appleboy/ssh-action@v0.1.10
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.GCE_INSTANCE_IP }}
         username: ${{ secrets.GCE_SSH_USERNAME }}
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
         script: |
+          # Authenticate Docker on the VM
+          echo '${{ secrets.GCP_SA_KEY }}' | docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
+          
+          # Stop and remove current container
           docker stop my-go-app || true
           docker rm my-go-app || true
+          
+          # Run previous version
           docker run -d --name my-go-app -p 8080:8080 --restart unless-stopped \
             ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:previous
