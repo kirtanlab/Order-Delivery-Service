@@ -127,7 +127,7 @@ jobs:
           
           # Pull and run new container
           docker pull ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
-          docker run -d --name my-go-app -p 8080:8080 --restart unless-stopped  --env-file /home/kirtanincanada/.env \
+          docker run -d --name my-go-app -p 8080:5000 --restart unless-stopped  --env-file /home/kirtanincanada/.env \
             ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
 
   rollback:
