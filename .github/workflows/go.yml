@@ -6,7 +6,7 @@ on:
     branches: [ main ]
 
 env:
-  PROJECT_ID: high-producer-461522-m7
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   IMAGE_NAME: my-go-app
   REGION: us-central1
 
@@ -69,6 +69,14 @@ jobs:
           --repository-format=docker \
           --location=${{ env.REGION }} \
           --description="Docker repository for my Go app" || true
+    
+    # Debug step to check SSH key format
+    - name: Debug SSH Key
+      run: |
+        echo "Checking SSH key format..."
+        echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" | head -1
+        echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" | tail -1
+        echo "Key length: $(echo '${{ secrets.GCE_SSH_PRIVATE_KEY }}' | wc -c)"
     
     - name: Build and push Docker image
       run: |
