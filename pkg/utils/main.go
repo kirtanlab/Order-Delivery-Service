@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -21,10 +20,10 @@ func GetSlug(s string) string {
 	s = strings.ReplaceAll(s, ",", "")
 	s = strings.ReplaceAll(s, ".", "")
 
-	rand.Seed(time.Now().UnixNano())
+	var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// Generate a random integer between 0 and 9
-	randomInt := rand.Intn(10)
+	randomInt := rnd.Intn(10)
 	s = s + "-" + strconv.Itoa(randomInt)
 	return s
 }
@@ -72,36 +71,21 @@ func (t *Timer) End(name string) {
 	fmt.Println(name, "took", duration)
 }
 
-func ParseDate(date string) (d time.Time, err error) {
-	err = errors.New("Invalid Date Format")
-	d, err = time.Parse("2006-01-02", date)
-	if err == nil {
-		return
-	}
-	d, err = time.Parse("2006/01/02", date)
-	if err == nil {
-		return
-	}
-
-	d, err = time.Parse("2006-01-02 15:04:05", date)
-	if err == nil {
-		return
+func ParseDate(date string) (time.Time, error) {
+	layouts := []string{
+		"2006-01-02",
+		"2006/01/02",
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05.000Z",
 	}
 
-	d, err = time.Parse("2006-01-02T15:04:05", date)
-	if err == nil {
-		return
+	for _, layout := range layouts {
+		if d, err := time.Parse(layout, date); err == nil {
+			return d, nil
+		}
 	}
 
-	d, err = time.Parse("2006-01-02T15:04:05Z", date)
-	if err == nil {
-		return
-	}
-
-	d, err = time.Parse("2006-01-02T15:04:05.000Z", date)
-	if err == nil {
-		return
-	}
-
-	return
+	return time.Time{}, fmt.Errorf("invalid date format: %s", date)
 }

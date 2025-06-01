@@ -26,41 +26,41 @@ const (
 
 type Order struct {
 	ID              uint             `json:"id" gorm:"primaryKey;autoIncrement;uniqueIndex"`    // primary key
-	CreatedAt       time.Time        `json:"createdAt" gorm:"<-:create" gorm:"type:timestamp;"` // created at
-	UpdatedAt       time.Time        `json:"updatedAt" gorm:"<-:create" gorm:"type:timestamp"`  // updated at
-	DeletedAt       gorm.DeletedAt   `json:"deletedAt" gorm:"<-:create" gorm:"type:timestamp"`  // deleted at
+	CreatedAt		time.Time `json:"createdAt" gorm:"<-:create;type:timestamp"`
+	UpdatedAt 		time.Time `json:"updatedAt" gorm:"<-:create;type:timestamp"`
+	DeletedAt 		gorm.DeletedAt `json:"deletedAt" gorm:"<-:create;type:timestamp"`
 	DeliveredTo     uint             `json:"deliveredTo" gorm:"<-:create"`
 	DeliveryAddress *DeliveryAddress `json:"deliveryAddress" gorm:"foreignKey:DeliveredTo;references:ID"`
 	Status          OrderStatus      `json:"status" gorm:"<-:create"`
 	Platform        utils.Platform   `json:"platform" gorm:"<-:create"`
 	DispatchTime    string           `json:"dispatchedTime" gorm:"<-:create"`
 	RiderNote       string           `json:"riderNote" gorm:"<-:create"`
-	ConfirmedAt     time.Time        `json:"confirmedAt" gorm:"<-:create" gorm:"type:timestamp"`
-	AssignedTo      uint             `json:"assignedTo" gorm:"<-:create" gorm:"index"`
+	ConfirmedAt 	time.Time `json:"confirmedAt" gorm:"<-:create;type:timestamp"`
+	AssignedTo  	uint      `json:"assignedTo" gorm:"<-:create;index"`
 	AssignedRider   *AssignedRider   `json:"assignedRider" gorm:"foreignKey:AssignedTo;references:ID"`
-	HubId           uint             `json:"hubId" gorm:"<-:create" gorm:"index"`
+	HubId       	uint      `json:"hubId" gorm:"<-:create;index"`	
 	Hub             hub.Hub          `json:"hub" gorm:"foreignKey:HubId"`
 	EDT             int              `json:"edt" gorm:"<-:create"`
 	PaymentMethod   string           `json:"paymentMethod" gorm:"<-:create"`
 	PaymentStatus   string           `json:"paymentStatus" gorm:"<-:create"`
-	ChargesId       uint             `json:"chargesId" gorm:"<-:create" gorm:"index"`
+	ChargesId       uint             `json:"chargesId" gorm:"<-:create;index"`
 	Charges         *OrderCharges    `json:"charges" gorm:"foreignKey:ChargesId;references:ID"`
 	Pickups         []*Pickup        `json:"pickups" gorm:"foreignKey:OrderId;references:ID"`
 	Items           []*OrderItem     `json:"items" gorm:"foreignKey:OrderId;references:ID"`
 	Timeline        []*OrderTimeline `json:"timeline" gorm:"foreignKey:OrderId;references:ID"`
-	CompletedAt     time.Time        `json:"completedAt" gorm:"<-:create" gorm:"type:timestamp"`
+	CompletedAt     time.Time        `json:"completedAt" gorm:"<-:create;type:timestamp"`
 }
 
 type OrderTimeline struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement;uniqueIndex"` // primary key
-	OrderId     uint      `json:"order_id" gorm:"<-:create" gorm:"index"`
+	OrderId     uint      `json:"order_id" gorm:"<-:create;index"`
 	Order       Order     `json:"order" gorm:"foreignKey:OrderId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // OrderId is the foreign key
 	OrderNumber string    `json:"order_number" gorm:"<-:create"`
-	PickupId    uint      `json:"pickup_id" gorm:"<-:create" gorm:"index"`
+	PickupId    uint      `json:"pickup_id" gorm:"<-:create;index"`
 	Pickup      *Pickup   `json:"pickup" gorm:"foreignKey:PickupId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // PickupId is the foreign key
 	Type        string    `json:"type" gorm:"<-:create"`
 	Note        string    `json:"note" gorm:"<-:create"`
-	CreatedAt   time.Time `json:"createdAt" gorm:"<-:create" gorm:"type:timestamp;"` // created at
+	CreatedAt   time.Time `json:"createdAt" gorm:"<-:create;type:timestamp;"` // created at
 }
 
 type OrderCharges struct {
@@ -89,12 +89,12 @@ const (
 
 type Pickup struct {
 	ID          uint           `json:"id" gorm:"primaryKey;autoIncrement;uniqueIndex"`    // primary key
-	CreatedAt   time.Time      `json:"createdAt" gorm:"<-:create" gorm:"type:timestamp;"` // created at
-	UpdatedAt   time.Time      `json:"updatedAt" gorm:"<-:create" gorm:"type:timestamp"`  // updated at
-	DeletedAt   gorm.DeletedAt `json:"deletedAt" gorm:"<-:create" gorm:"type:timestamp"`  // deleted at
-	BrandId     uint           `json:"brand_id" gorm:"<-:create" gorm:"index"`
+	CreatedAt   time.Time      `json:"createdAt" gorm:"<-:create;type:timestamp;"` // created at
+	UpdatedAt   time.Time      `json:"updatedAt" gorm:"<-:create;type:timestamp"`  // updated at
+	DeletedAt   gorm.DeletedAt `json:"deletedAt" gorm:"<-:create;type:timestamp"`  // deleted at
+	BrandId     uint           `json:"brand_id" gorm:"<-:create;index"`
 	Brand       brand.Brand    `json:"brand" gorm:"foreignKey:BrandId"`
-	OrderId     uint           `json:"order_id" gorm:"<-:create" gorm:"index"`
+	OrderId     uint           `json:"order_id" gorm:"<-:create;index"`
 	Order       Order          `json:"order" gorm:"foreignKey:OrderId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // OrderId is the foreign key
 	OrderNumber string         `json:"order_number" gorm:"<-:create"`
 	Note        string         `json:"note" gorm:"<-:create"`
@@ -105,27 +105,27 @@ type Pickup struct {
 
 type OrderItem struct {
 	gorm.Model
-	ProductId uint           `json:"product_id" gorm:"<-:create" gorm:"index"`
+	ProductId uint           `json:"product_id" gorm:"<-:create;index"`
 	Product   *brand.Product `json:"product" gorm:"<-:create;foreignKey:ProductId;references:ID"`
 	Quantity  int            `json:"quantity" gorm:"<-:create"`
 	SaleUnit  float64        `json:"sale_unit" gorm:"<-:create"`
 	Total     float64        `json:"total" gorm:"<-:create"`
 	Discount  float64        `json:"discount" gorm:"<-:create"`
-	PickupId  uint           `json:"pickup_id" gorm:"<-:create" gorm:"index"`
+	PickupId  uint           `json:"pickup_id" gorm:"<-:create;index"`
 	Pickup    *Pickup        `json:"pickup" gorm:"foreignKey:PickupId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	OrderId   uint           `json:"order_id" gorm:"<-:create" gorm:"index"`
+	OrderId   uint           `json:"order_id" gorm:"<-:create;index"`
 	Order     *Order         `json:"order" gorm:"foreignKey:OrderId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 type DeliveryAddress struct {
 	gorm.Model
 	Name       string           `json:"name" gorm:"<-:create"`
-	Phone      string           `json:"phone" gorm:"<-:create" gorm:"index"`
+	Phone      string           `json:"phone" gorm:"<-:create;index"`
 	Address    string           `json:"address" gorm:"<-:create"`
 	Area       string           `json:"area" gorm:"<-:create"`
 	Lat        float64          `json:"lat" gorm:"<-:create"`
 	Lng        float64          `json:"lng" gorm:"<-:create"`
-	CustomerId uint             `json:"customer_id" gorm:"<-:create" gorm:"index"`
+	CustomerId uint             `json:"customer_id" gorm:"<-:create;index"`
 	Customer   *market.Customer `json:"customer" gorm:"<-:create;foreignKey:CustomerId;references:ID"`
 }
 

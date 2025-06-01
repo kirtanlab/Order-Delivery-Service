@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/shariarfaisal/order-ms/pkg/order"
 	"gorm.io/gorm"
@@ -27,18 +29,21 @@ Tables:
 */
 
 func Migration(db *gorm.DB) {
-	db.AutoMigrate(
-		&order.Order{},
-		&order.Pickup{},
-		&order.OrderItem{},
-		&order.DeliveryAddress{},
-		&order.AssignedRider{},
-		&order.CartItem{},
-		&order.OrderIssue{},
-		&order.RestaurantPenalty{},
-		&order.RiderPenalty{},
-		&order.OrderRefund{},
-	)
+	if err := db.AutoMigrate(
+	&order.Order{},
+	&order.Pickup{},
+	&order.OrderItem{},
+	&order.DeliveryAddress{},
+	&order.AssignedRider{},
+	&order.CartItem{},
+	&order.OrderIssue{},
+	&order.RestaurantPenalty{},
+	&order.RiderPenalty{},
+	&order.OrderRefund{},
+); err != nil {
+	log.Printf("failed to migrate order models: %v", err)
+}
+
 }
 
 func Init(database *gorm.DB, r *gin.Engine) {

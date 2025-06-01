@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -73,7 +74,11 @@ TODO: Send Notification
 
 func (s *OrderService) createOrder(c *gin.Context) {
 	var params OrderSchema
-	c.ShouldBindJSON(&params)
+	if err := c.ShouldBindJSON(&params); err != nil {
+	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	return
+}
+
 
 	isValid, errors := validator.Validate(params)
 	if !isValid {
@@ -141,14 +146,15 @@ func (s *OrderService) createOrder(c *gin.Context) {
 	// 	PromoDiscount: order.PromoDiscount,
 	// }
 
-	db.Transaction(func(tx *gorm.DB) error {
+	if err := db.Transaction(func(tx *gorm.DB) error {
+	// create order
+	// create pickups
+	// create order items
+	return nil
+}); err != nil {
+	log.Printf("transaction failed: %v", err)
+}
 
-		// create order
-		// create pickups
-		// create order items
-
-		return nil
-	})
 
 	c.JSON(http.StatusOK, gin.H{"message": "Order Created"})
 }

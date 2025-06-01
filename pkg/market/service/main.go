@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/shariarfaisal/order-ms/pkg/market"
 	"github.com/shariarfaisal/order-ms/pkg/middleware"
@@ -10,10 +12,22 @@ import (
 var db *gorm.DB
 
 func Migration(db *gorm.DB) {
-	db.AutoMigrate(&market.Customer{})
-	db.AutoMigrate(&market.CustomerAddress{})
-	db.AutoMigrate(&market.Section{}, &market.SectionItem{})
-	db.AutoMigrate(&market.Voucher{})
+	if err := db.AutoMigrate(&market.Customer{}); err != nil {
+	log.Fatalf("AutoMigrate failed for Customer: %v", err)
+}
+
+if err := db.AutoMigrate(&market.CustomerAddress{}); err != nil {
+	log.Fatalf("AutoMigrate failed for CustomerAddress: %v", err)
+}
+
+if err := db.AutoMigrate(&market.Section{}, &market.SectionItem{}); err != nil {
+	log.Fatalf("AutoMigrate failed for Section and SectionItem: %v", err)
+}
+
+if err := db.AutoMigrate(&market.Voucher{}); err != nil {
+	log.Fatalf("AutoMigrate failed for Voucher: %v", err)
+}
+
 }
 
 func Init(database *gorm.DB, r *gin.Engine) {

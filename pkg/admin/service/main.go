@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/shariarfaisal/order-ms/pkg/admin"
 	"github.com/shariarfaisal/order-ms/pkg/middleware"
@@ -10,7 +12,10 @@ import (
 var db *gorm.DB
 
 func Migration(db *gorm.DB) {
-	db.AutoMigrate(&admin.Admin{}, &admin.Role{})
+	if err := db.AutoMigrate(&admin.Admin{}, &admin.Role{}); err != nil {
+	log.Printf("failed to migrate admin models: %v", err)
+}
+
 }
 
 func Init(database *gorm.DB, r *gin.Engine) {

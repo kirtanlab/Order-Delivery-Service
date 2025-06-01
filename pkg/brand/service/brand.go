@@ -180,8 +180,8 @@ func (s *BrandService) getBrands(c *gin.Context) {
 	c.JSON(200, gin.H{"result": brands})
 }
 
-func (s *BrandService) getByIds(ids []int) []Brand.Brand {
-	var brands []Brand.Brand
-	db.Where("id IN ?", ids).Find(&brands)
-	return brands
-}
+// func (s *BrandService) getByIds(ids []int) []Brand.Brand {
+// 	var brands []Brand.Brand
+// 	db.Where("id IN ?", ids).Find(&brands)
+// 	return brands
+// }

@@ -30,7 +30,11 @@ type LoginAdminSchema struct {
 
 func (s *AdminService) loginAdmin(c *gin.Context) {
 	var payloads LoginAdminSchema
-	c.ShouldBindJSON(&payloads)
+	if err := c.ShouldBindJSON(&payloads); err != nil {
+	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	return
+}
+
 
 	if isValid, errors := validator.Validate(payloads); !isValid {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -126,7 +130,11 @@ func (s *AdminService) createAdmin(c *gin.Context) {
 	}
 
 	var payloads CreateAdminSchema
-	c.ShouldBindJSON(&payloads)
+	if err := c.ShouldBindJSON(&payloads); err != nil {
+	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	return
+}
+
 
 	isValid, errors := validator.Validate(payloads)
 	if !isValid {

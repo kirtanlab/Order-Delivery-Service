@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"log"
+
 	"github.com/shariarfaisal/order-ms/pkg/hub"
 	"gorm.io/gorm"
 )
@@ -93,12 +95,29 @@ type BrandAddress struct {
 	RoadNo     string  `json:"roadNo,omitempty"`
 }
 
+
+
 func Migration(db *gorm.DB) {
-	db.AutoMigrate(&Brand{})
-	db.AutoMigrate(&BrandAddress{})
-	db.AutoMigrate(&BrandCategory{})
-	db.AutoMigrate(&Partner{})
-	db.AutoMigrate(&PartnerUser{})
-	db.AutoMigrate(&ProductCategory{})
-	db.AutoMigrate(&Product{}, &ProductVariant{}, &PurchaseProduct{}, &ProductDiscount{})
+	if err := db.AutoMigrate(&Brand{}); err != nil {
+		log.Printf("failed to migrate Brand: %v", err)
+	}
+	if err := db.AutoMigrate(&BrandAddress{}); err != nil {
+		log.Printf("failed to migrate BrandAddress: %v", err)
+	}
+	if err := db.AutoMigrate(&BrandCategory{}); err != nil {
+		log.Printf("failed to migrate BrandCategory: %v", err)
+	}
+	if err := db.AutoMigrate(&Partner{}); err != nil {
+		log.Printf("failed to migrate Partner: %v", err)
+	}
+	if err := db.AutoMigrate(&PartnerUser{}); err != nil {
+		log.Printf("failed to migrate PartnerUser: %v", err)
+	}
+	if err := db.AutoMigrate(&ProductCategory{}); err != nil {
+		log.Printf("failed to migrate ProductCategory: %v", err)
+	}
+	if err := db.AutoMigrate(&Product{}, &ProductVariant{}, &PurchaseProduct{}, &ProductDiscount{}); err != nil {
+		log.Printf("failed to migrate product-related models: %v", err)
+	}
 }
+

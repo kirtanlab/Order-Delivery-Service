@@ -38,11 +38,8 @@ func IsValidDate(date string) bool {
 	}
 
 	_, err = time.Parse("2006-01-02T15:04:05.000Z", date)
-	if err == nil {
-		return true
-	}
+	return err == nil
 
-	return false
 }
 
 // Email validation 
@@ -89,12 +86,12 @@ var messages = map[string] string{
 	"ipv4": "It must be a valid IPv4 address.",
 }
 
-type params struct {
-	v reflect.Value 
-	l string 
-	name string 
-	errPrefix string 
-}
+// type params struct {
+// 	v reflect.Value 
+// 	l string 
+// 	name string 
+// 	errPrefix string 
+// }
 
 type Field struct {
 	Name string

@@ -36,14 +36,14 @@ func (s *SectionService) delete(c *gin.Context) {
 
 }
 
-func (s *SectionService) addItem(c *gin.Context) {
+// func (s *SectionService) addItem(c *gin.Context) {
 
-}
+// }
 
-func (s *SectionService) updateItem(c *gin.Context) {
+// func (s *SectionService) updateItem(c *gin.Context) {
 
-}
+// }
 
-func (s *SectionService) deleteItem(c *gin.Context) {
+// func (s *SectionService) deleteItem(c *gin.Context) {
 
-}
+// }

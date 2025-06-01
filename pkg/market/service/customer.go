@@ -60,7 +60,11 @@ type LoginSchema struct {
 
 func (s *CustomerService) login(c *gin.Context) {
 	var payloads LoginSchema
-	c.ShouldBindJSON(&payloads)
+	if err := c.ShouldBindJSON(&payloads); err != nil {
+	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	return
+}
+
 
 	isValid, errors := validator.Validate(payloads)
 	if !isValid {
@@ -137,7 +141,11 @@ type SignUpSchema struct {
 
 func (s *CustomerService) signUp(c *gin.Context) {
 	var payloads SignUpSchema
-	c.ShouldBindJSON(&payloads)
+	if err := c.ShouldBindJSON(&payloads); err != nil {
+	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	return
+}
+
 
 	isValid, errors := validator.Validate(payloads)
 	if !isValid {

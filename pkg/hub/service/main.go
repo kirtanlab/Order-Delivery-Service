@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/shariarfaisal/order-ms/pkg/hub"
 	"gorm.io/gorm"
@@ -9,7 +11,10 @@ import (
 var db *gorm.DB
 
 func Migration(db *gorm.DB) {
-	db.AutoMigrate(&hub.Hub{})
+	if err := db.AutoMigrate(&hub.Hub{}); err != nil {
+	log.Printf("failed to migrate Hub model: %v", err)
+}
+
 }
 
 func Init(database *gorm.DB, r *gin.Engine) {

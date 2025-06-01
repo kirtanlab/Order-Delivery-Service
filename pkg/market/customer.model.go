@@ -35,8 +35,8 @@ type Customer struct {
 	UpdatedAt     time.Time      `json:"updatedAt,omitempty" gorm:"<-:create;type:timestamp"`
 	Name          string         `json:"name,omitempty" gorm:"<-:create"`
 	Image         string         `json:"image,omitempty" gorm:"<-:create"`
-	Phone         string         `json:"phone,omitempty" gorm:"<-:create" gorm:"index"`
-	Email         string         `json:"email,omitempty" gorm:"<-:create" gorm:"index"`
+	Phone string `json:"phone,omitempty" gorm:"<-:create;index"`
+	Email string `json:"email,omitempty" gorm:"<-:create;index"`
 	EmailVerified bool           `json:"emailVerified,omitempty" gorm:"<-:create"`
 	PushToken     string         `json:"pushToken,omitempty" gorm:"<-:create"`
 	Password      string         `json:"-" gorm:"<-:create"`

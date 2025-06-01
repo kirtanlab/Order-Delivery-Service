@@ -33,7 +33,11 @@ type createDto struct {
 
 func (s *HubService) createHub(c *gin.Context) {
 	var params createDto
-	c.ShouldBindJSON(&params)
+	if err := c.ShouldBindJSON(&params); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 
 	if isValid, errMsg := validator.Validate(params); !isValid {
 		fmt.Println(errMsg)

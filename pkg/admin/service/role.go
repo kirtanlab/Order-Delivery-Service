@@ -25,7 +25,11 @@ type CreateRoleSchema struct {
 
 func (s *RoleService) createRole(c *gin.Context) {
 	var payloads CreateRoleSchema
-	c.ShouldBindJSON(&payloads)
+	if err := c.ShouldBindJSON(&payloads); err != nil {
+	c.JSON(400, gin.H{"error": err.Error()})
+	return
+}
+
 
 	isValid, errors := validator.Validate(payloads)
 	if !isValid {
