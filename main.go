@@ -1,10 +1,10 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"log"
 	"net/http"
-	// "os"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	dotEnv "github.com/joho/godotenv"
@@ -37,22 +37,20 @@ func initEnv() {
 func main() {
 	initEnv()
 
-	// Load environment variables
-	// env := os.Getenv("ENV")
-	// host := os.Getenv("DB_HOST")
-	// user := os.Getenv("DB_USER")
-	// password := os.Getenv("DB_PASSWORD")
-	// dbName := os.Getenv("DB_NAME")
-	// port := os.Getenv("DB_PORT")
+	env := os.Getenv("ENV")
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
 
-	// // Use sslmode=require for development (Neon requires it)
-	// sslMode := "require"
-	// if env == "production" {
-	// 	sslMode = "disable" // or adjust based on your prod config
-	// }
+	sslMode := "require"
+	if env == "production" {
+		sslMode = "disable"
+	}
 
-	// dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, dbName, port, sslMode)
-	dsn := "postgresql://neondb_owner:npg_QJ5CW6Nqwzsj@ep-silent-mud-a5159hty.us-east-2.aws.neon.tech/neondb?sslmode=require"
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+	host, user, password, dbName, port, sslMode)
 
 	// Connect to the database
 	dbRes, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
