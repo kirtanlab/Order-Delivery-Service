@@ -46,56 +46,32 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
     - uses: actions/checkout@v4
-    
-    # Updated authentication method
+
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
-    
+
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: ${{ env.PROJECT_ID }}
-    
-    # Configure Docker authentication properly
+
     - name: Configure Docker to use gcloud as credential helper
       run: |
         gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-    
-    - name: Create Artifact Registry repository (if not exists)
-      run: |
-        gcloud artifacts repositories create my-repo \
-          --repository-format=docker \
-          --location=${{ env.REGION }} \
-          --description="Docker repository for my Go app" || true
-    
-    # Debug step to check SSH key format
-    - name: Debug SSH Key
-      run: |
-        echo "Checking SSH key format..."
-        echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" | head -1
-        echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" | tail -1
-        echo "Key length: $(echo '${{ secrets.GCE_SSH_PRIVATE_KEY }}' | wc -c)"
-    
+
     - name: Build and push Docker image
       run: |
-        # Build the image
         docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-        
-        # Push the SHA-tagged image
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        
-        # Tag and push as latest
         docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} \
                    ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
-        
-        # Tag and push as previous (for rollback)
         docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} \
                    ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:previous
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:previous
-    
+
     - name: Deploy to VM via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -106,28 +82,19 @@ jobs:
         timeout: 60s
         command_timeout: 10m
         script: |
-          # Check if Docker is installed and running
-          if ! command -v docker &> /dev/null; then
-            echo "Docker is not installed"
-            exit 1
-          fi
-          
-          # Create temporary file for service account key
+          echo "${{ secrets.ENV_FILE_CONTENT }}" > /home/${{ secrets.GCE_SSH_USERNAME }}/.env
+          chmod 600 /home/${{ secrets.GCE_SSH_USERNAME }}/.env
+
           echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp_key.json
-          
-          # Authenticate Docker on the VM using the key file
           cat /tmp/gcp_key.json | docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
-          
-          # Clean up the temporary file
           rm -f /tmp/gcp_key.json
-          
-          # Stop and remove existing container
+
           docker stop my-go-app || true
           docker rm my-go-app || true
-          
-          # Pull and run new container
+
           docker pull ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
-          docker run -d --name my-go-app -p 8080:5000 --restart unless-stopped  --env-file /home/kirtanincanada/.env \
+          docker run -d --name my-go-app -p 8080:5000 --restart unless-stopped \
+            --env-file /home/${{ secrets.GCE_SSH_USERNAME }}/.env \
             ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
 
   rollback:
