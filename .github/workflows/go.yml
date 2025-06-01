@@ -77,24 +77,20 @@ jobs:
                    ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
     
-    - name: Deploy to GCE
+    - name: Deploy to Ubuntu VM
       run: |
-        gcloud compute ssh ${{ secrets.GCE_SSH_USERNAME }}@${{ secrets.GCE_INSTANCE_NAME }} \
-          --zone=${{ secrets.GCE_INSTANCE_ZONE }} \
-          --command="
-            # Configure docker on VM
-            gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-            
-            # Stop existing container
-            docker stop ${{ env.IMAGE_NAME }} || true
-            docker rm ${{ env.IMAGE_NAME }} || true
-            
-            # Pull and run new image
-            docker pull ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
-            docker run -d --name ${{ env.IMAGE_NAME }} -p 8080:8080 \
-              --restart unless-stopped \
-              ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.IMAGE_NAME }}:latest
-          "
+        # Create temporary SSH key file
+        echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" > /tmp/ssh_key
+        chmod 600 /tmp/ssh_key
+        
+        # Deploy using SSH
+        ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no \
+          ${{ secrets.GCE_SSH_USERNAME }}@$(gcloud compute instances describe ${{ secrets.GCE_INSTANCE_NAME }} \
+          --zone=${{ secrets.GCE_INSTANCE_ZONE }} --format='get(networkInterfaces[0].accessConfigs[0].natIP)') \
+          "bash ~/deploy.sh latest"
+        
+        # Clean up SSH key
+        rm /tmp/ssh_key
 
   rollback:
     needs: build-and-deploy
