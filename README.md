@@ -55,7 +55,7 @@ order-ms/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/shariarfaisal/order-ms.git
+   git clone https://github.com/kirtanlab/Order-Delivery-Service.git
    cd order-ms
    ```
 
