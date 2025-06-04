@@ -3,6 +3,8 @@
 
 A microservice-based order management system built with Go and Gin framework that handles orders, brands, products, customers, and rider management. This service provides a complete backend for e-commerce or food delivery platforms.
 
+## Architecture 
+![System Architecture](https://github.com/kirtanlab/Order-Delivery-Service/blob/main/system-flow.png)
 ## Features
 
 
